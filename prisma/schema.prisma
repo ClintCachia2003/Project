@@ -63,6 +63,7 @@ model Worker {
   availability    Availability[]
   bookings        Booking[]
   reviews         Review[]
+  misconductFees  MisconductFee[]
 }
 
 model Availability {
@@ -100,6 +101,7 @@ model Booking {
   review        Review?
   payment       Payment?
   dispute       Dispute?
+  quote         Quote?
 }
 
 model Review {
@@ -139,6 +141,28 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount    Float
+  notes     String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MisconductFee {
+  id        String   @id @default(cuid())
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id])
+  bookingId String?
+  amount    Float    @default(20)
+  reason    String
+  isPaid    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Dispute {

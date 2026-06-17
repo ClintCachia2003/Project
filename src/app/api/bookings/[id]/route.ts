@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         review: { include: { author: { select: { name: true, avatar: true } } } },
         payment: true,
         dispute: true,
+        quote: true,
       },
     });
 

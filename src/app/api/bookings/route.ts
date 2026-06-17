@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         },
         review: true,
         payment: true,
+        quote: true,
       },
       orderBy: { date: "desc" },
     });

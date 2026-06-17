@@ -49,7 +49,9 @@ export const TIME_SLOTS = [
 export function getStatusColor(status: string) {
   const colors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
+    quoted: "bg-orange-100 text-orange-700",
     confirmed: "bg-blue-100 text-blue-800",
+    paid: "bg-emerald-100 text-emerald-700",
     in_progress: "bg-purple-100 text-purple-800",
     completed: "bg-green-100 text-green-800",
     cancelled: "bg-red-100 text-red-800",
@@ -60,7 +62,9 @@ export function getStatusColor(status: string) {
 export function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: "Pending",
+    quoted: "Quote Sent",
     confirmed: "Confirmed",
+    paid: "Paid",
     in_progress: "In Progress",
     completed: "Completed",
     cancelled: "Cancelled",

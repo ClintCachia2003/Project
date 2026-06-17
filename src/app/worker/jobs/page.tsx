@@ -18,9 +18,10 @@ interface Booking {
   notes?: string;
   cancelReason?: string;
   customer: { id: string; name: string; email: string; phone?: string; avatar?: string };
+  quote?: { id: string; amount: number; notes?: string; status: string };
 }
 
-const TABS = ["all", "pending", "confirmed", "completed", "cancelled"] as const;
+const TABS = ["all", "pending", "quoted", "confirmed", "paid", "completed", "cancelled"] as const;
 
 function JobsContent() {
   const searchParams = useSearchParams();
@@ -29,9 +30,9 @@ function JobsContent() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [declineId, setDeclineId] = useState<string | null>(null);
-  const [declineReason, setDeclineReason] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [quoteForm, setQuoteForm] = useState<{ [id: string]: { amount: string; notes: string } }>({});
+  const [showQuoteForm, setShowQuoteForm] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -41,17 +42,31 @@ function JobsContent() {
       .catch(() => setLoading(false));
   }, []);
 
-  async function updateStatus(id: string, status: string, reason?: string) {
-    setActionLoading(id);
-    const res = await authFetch(`/api/bookings/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, cancelReason: reason }),
+  async function submitQuote(bookingId: string) {
+    const form = quoteForm[bookingId];
+    if (!form?.amount) return;
+    setActionLoading(bookingId);
+    const res = await authFetch("/api/quotes", {
+      method: "POST",
+      body: JSON.stringify({ bookingId, amount: parseFloat(form.amount), notes: form.notes || undefined }),
     });
     if (res.ok) {
       const data = await res.json();
-      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, ...data.booking } : b)));
-      setDeclineId(null);
-      setDeclineReason("");
+      setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: "quoted", quote: data.quote } : b));
+      setShowQuoteForm(null);
+    }
+    setActionLoading(null);
+  }
+
+  async function markComplete(id: string) {
+    setActionLoading(id);
+    const res = await authFetch(`/api/bookings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "completed" }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setBookings((prev) => prev.map((b) => b.id === id ? { ...b, ...data.booking } : b));
     }
     setActionLoading(null);
   }
@@ -66,12 +81,12 @@ function JobsContent() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
+      <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
               activeTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -118,7 +133,9 @@ function JobsContent() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-gray-900">{formatCurrency(b.totalAmount)}</p>
+                    <p className="font-bold text-gray-900">
+                      {b.quote ? formatCurrency(b.quote.amount) : b.totalAmount > 0 ? formatCurrency(b.totalAmount) : "—"}
+                    </p>
                     <p className="text-xs text-gray-400 mt-1">{expanded === b.id ? "▲" : "▼"}</p>
                   </div>
                 </div>
@@ -156,60 +173,84 @@ function JobsContent() {
                     </div>
                   )}
 
+                  {/* Quote info for quoted/confirmed/paid/completed */}
+                  {b.quote && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm">
+                      <p className="text-xs text-blue-500 uppercase tracking-wider mb-1">Your Quote</p>
+                      <p className="font-bold text-blue-800 text-lg">{formatCurrency(b.quote.amount)}</p>
+                      {b.quote.notes && <p className="text-blue-700 mt-1">{b.quote.notes}</p>}
+                      <p className="text-xs text-blue-400 mt-1 capitalize">Status: {b.quote.status}</p>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   {b.status === "pending" && (
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      <button
-                        onClick={() => updateStatus(b.id, "confirmed")}
-                        disabled={actionLoading === b.id}
-                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === b.id ? "..." : "Accept"}
-                      </button>
-                      <button
-                        onClick={() => setDeclineId(declineId === b.id ? null : b.id)}
-                        className="px-4 py-2 bg-white border border-red-300 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors"
-                      >
-                        Decline
-                      </button>
+                    <>
+                      {showQuoteForm !== b.id ? (
+                        <button
+                          onClick={() => setShowQuoteForm(b.id)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+                        >
+                          💰 Submit Quote
+                        </button>
+                      ) : (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+                          <p className="text-sm font-semibold text-blue-900">Submit a Price Quote</p>
+                          <div>
+                            <label className="block text-xs text-blue-700 mb-1">Amount (€)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.01"
+                              value={quoteForm[b.id]?.amount || ""}
+                              onChange={(e) => setQuoteForm((prev) => ({ ...prev, [b.id]: { ...prev[b.id], amount: e.target.value } }))}
+                              placeholder="e.g. 150.00"
+                              className="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-blue-700 mb-1">Notes (optional)</label>
+                            <textarea
+                              rows={2}
+                              value={quoteForm[b.id]?.notes || ""}
+                              onChange={(e) => setQuoteForm((prev) => ({ ...prev, [b.id]: { ...prev[b.id], notes: e.target.value } }))}
+                              placeholder="Breakdown or comments for the customer..."
+                              className="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => submitQuote(b.id)}
+                              disabled={actionLoading === b.id || !quoteForm[b.id]?.amount}
+                              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === b.id ? "Sending..." : "Send Quote"}
+                            </button>
+                            <button
+                              onClick={() => setShowQuoteForm(null)}
+                              className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {b.status === "quoted" && (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-medium">
+                      ⏳ Awaiting customer approval for {b.quote ? formatCurrency(b.quote.amount) : "your quote"}
                     </div>
                   )}
 
-                  {declineId === b.id && (
-                    <div className="bg-red-50 rounded-xl p-4 space-y-3">
-                      <p className="text-sm font-medium text-red-800">Reason for declining</p>
-                      <textarea
-                        value={declineReason}
-                        onChange={(e) => setDeclineReason(e.target.value)}
-                        rows={3}
-                        placeholder="Explain why you're declining this job..."
-                        className="w-full px-3 py-2 rounded-xl border border-red-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => updateStatus(b.id, "cancelled", declineReason)}
-                          disabled={actionLoading === b.id || !declineReason.trim()}
-                          className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-                        >
-                          Confirm Decline
-                        </button>
-                        <button
-                          onClick={() => { setDeclineId(null); setDeclineReason(""); }}
-                          className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {b.status === "confirmed" && (
+                  {b.status === "paid" && (
                     <button
-                      onClick={() => updateStatus(b.id, "completed")}
+                      onClick={() => markComplete(b.id)}
                       disabled={actionLoading === b.id}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
                     >
-                      {actionLoading === b.id ? "..." : "Mark as Complete"}
+                      {actionLoading === b.id ? "..." : "✅ Mark as Complete"}
                     </button>
                   )}
                 </div>

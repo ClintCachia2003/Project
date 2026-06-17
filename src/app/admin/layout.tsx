@@ -23,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/workers", label: "Workers", icon: "👷" },
     { href: "/admin/workers/new", label: "Add Worker", icon: "➕" },
     { href: "/admin/disputes", label: "Disputes", icon: "⚖️" },
+    { href: "/admin/misconduct", label: "Misconduct", icon: "⚠️" },
   ];
 
   return (

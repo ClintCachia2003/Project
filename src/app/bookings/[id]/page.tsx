@@ -34,6 +34,7 @@ interface Booking {
   review?: { rating: number; comment: string; author: { name: string } };
   payment?: { status: string; amount: number; paidAt?: string };
   dispute?: { id: string; status: string; reason: string; description: string; resolution?: string };
+  quote?: { id: string; amount: number; notes?: string; status: string };
 }
 
 function BookingDetailContent() {
@@ -60,6 +61,7 @@ function BookingDetailContent() {
   const [disputeDescription, setDisputeDescription] = useState("");
   const [disputeLoading, setDisputeLoading] = useState(false);
   const [disputeSubmitted, setDisputeSubmitted] = useState(false);
+  const [quoteActionLoading, setQuoteActionLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -119,6 +121,26 @@ function BookingDetailContent() {
       setShowDisputeForm(false);
     }
     setDisputeLoading(false);
+  }
+
+  async function handleQuoteAction(action: "approve" | "decline") {
+    if (!booking?.quote) return;
+    setQuoteActionLoading(true);
+    const res = await authFetch(`/api/quotes/${booking.quote.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setBooking((prev) => prev ? {
+        ...prev,
+        status: data.booking.status,
+        totalAmount: data.booking.totalAmount,
+        quote: { ...prev.quote!, status: action === "approve" ? "approved" : "declined" },
+      } : null);
+    }
+    setQuoteActionLoading(false);
   }
 
   async function submitReview() {
@@ -245,6 +267,54 @@ function BookingDetailContent() {
         )}
       </div>
 
+      {/* Quote card */}
+      {booking.quote && (
+        <div className={`rounded-2xl border p-5 mb-4 ${
+          booking.quote.status === "approved" ? "bg-green-50 border-green-200" :
+          booking.quote.status === "declined" ? "bg-red-50 border-red-200" :
+          "bg-blue-50 border-blue-200"
+        }`}>
+          <h3 className="font-bold text-gray-900 mb-3">Worker&apos;s Quote</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">€{booking.quote.amount.toFixed(2)}</p>
+              {booking.quote.notes && <p className="text-sm text-gray-600 mt-1">{booking.quote.notes}</p>}
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+              booking.quote.status === "approved" ? "bg-green-200 text-green-800" :
+              booking.quote.status === "declined" ? "bg-red-200 text-red-800" :
+              "bg-blue-200 text-blue-800"
+            }`}>
+              {booking.quote.status === "pending" ? "Awaiting your response" : booking.quote.status}
+            </span>
+          </div>
+          {isCustomer && booking.quote.status === "pending" && (
+            <>
+              <div className="bg-white/60 rounded-xl p-3 text-xs text-gray-600 mb-3">
+                <p>Platform fee (15%): €{(booking.quote.amount * 0.15).toFixed(2)}</p>
+                <p>Worker receives: €{(booking.quote.amount * 0.85).toFixed(2)}</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleQuoteAction("approve")}
+                  disabled={quoteActionLoading}
+                  className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {quoteActionLoading ? "..." : "✓ Approve Quote"}
+                </button>
+                <button
+                  onClick={() => handleQuoteAction("decline")}
+                  disabled={quoteActionLoading}
+                  className="flex-1 px-4 py-2.5 bg-white border border-red-300 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  Decline
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Payment */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
         <h3 className="font-bold text-gray-900 mb-3">Payment</h3>
@@ -299,25 +369,14 @@ function BookingDetailContent() {
       {/* Actions */}
       <div className="space-y-3">
         {/* Worker actions */}
-        {isWorker && booking.status === "pending" && (
-          <div className="flex gap-3">
-            <Button className="flex-1" onClick={() => updateStatus("confirmed")} loading={actionLoading}>
-              Confirm Booking
-            </Button>
-            <Button variant="danger" className="flex-1" onClick={() => setShowCancelForm(true)}>
-              Decline
-            </Button>
-          </div>
-        )}
-
-        {isWorker && booking.status === "confirmed" && (
+        {isWorker && booking.status === "paid" && (
           <Button className="w-full" onClick={() => updateStatus("completed")} loading={actionLoading}>
-            Mark as Completed
+            ✅ Mark as Completed
           </Button>
         )}
 
         {/* Customer actions */}
-        {isCustomer && ["pending", "confirmed"].includes(booking.status) && (
+        {isCustomer && ["pending", "quoted", "confirmed"].includes(booking.status) && (
           <>
             {!showCancelForm ? (
               <Button variant="danger" className="w-full" onClick={() => setShowCancelForm(true)}>
