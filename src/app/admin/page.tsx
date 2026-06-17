@@ -25,8 +25,20 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
 
-  useEffect(() => {
+  async function handleSeed(reset: boolean) {
+    setSeeding(true);
+    setSeedMsg("");
+    const res = await fetch(`/api/seed${reset ? "?reset=true" : ""}`, { method: "POST" });
+    const data = await res.json();
+    setSeedMsg(data.message || data.error || "Done");
+    setSeeding(false);
+    loadStats();
+  }
+
+  function loadStats() {
     fetch("/api/admin/stats")
       .then((r) => r.json())
       .then((d) => {
@@ -35,6 +47,10 @@ export default function AdminDashboard() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadStats();
   }, []);
 
   const statCards = stats
@@ -53,13 +69,34 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-500 mt-1">Overview of your TradePro platform</p>
         </div>
-        <Link
-          href="/admin/workers/new"
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
-        >
-          + Add Worker
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleSeed(false)}
+            disabled={seeding}
+            className="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors disabled:opacity-50"
+          >
+            {seeding ? "Seeding…" : "Seed Data"}
+          </button>
+          <button
+            onClick={() => { if (confirm("This will WIPE all data and re-seed. Continue?")) handleSeed(true); }}
+            disabled={seeding}
+            className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors disabled:opacity-50"
+          >
+            Reset & Re-seed
+          </button>
+          <Link
+            href="/admin/workers/new"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
+          >
+            + Add Worker
+          </Link>
+        </div>
       </div>
+      {seedMsg && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
+          ✓ {seedMsg}
+        </div>
+      )}
 
       {/* Stats */}
       {loading ? (
