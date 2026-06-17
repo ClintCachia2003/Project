@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -70,7 +72,7 @@ export default function WorkerProfilePage() {
   async function loadSlots(date: Date) {
     setSlotsLoading(true);
     setSelectedSlot(null);
-    const res = await fetch(`/api/workers/${id}/availability?date=${format(date, "yyyy-MM-dd")}`);
+    const res = await authFetch(`/api/workers/${id}/availability?date=${format(date, "yyyy-MM-dd")}`);
     if (res.ok) {
       const data = await res.json();
       setSlots(data.slots || []);
@@ -95,7 +97,7 @@ export default function WorkerProfilePage() {
 
     setBookingLoading(true);
     setBookingError("");
-    const res = await fetch("/api/bookings", {
+    const res = await authFetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

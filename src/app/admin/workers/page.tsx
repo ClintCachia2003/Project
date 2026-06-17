@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -33,7 +35,7 @@ export default function AdminWorkersPage() {
 
   async function loadWorkers() {
     setLoading(true);
-    const res = await fetch("/api/admin/workers");
+    const res = await authFetch("/api/admin/workers");
     if (res.ok) {
       const data = await res.json();
       setWorkers(data.workers || []);
@@ -42,7 +44,7 @@ export default function AdminWorkersPage() {
   }
 
   async function handleToggleAvailable(worker: Worker) {
-    await fetch(`/api/admin/workers/${worker.id}`, {
+    await authFetch(`/api/admin/workers/${worker.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isAvailable: !worker.isAvailable }),
@@ -53,7 +55,7 @@ export default function AdminWorkersPage() {
   }
 
   async function handleToggleVerified(worker: Worker) {
-    await fetch(`/api/admin/workers/${worker.id}`, {
+    await authFetch(`/api/admin/workers/${worker.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isVerified: !worker.isVerified }),
@@ -65,7 +67,7 @@ export default function AdminWorkersPage() {
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    const res = await fetch(`/api/admin/workers/${id}`, { method: "DELETE" });
+    const res = await authFetch(`/api/admin/workers/${id}`, { method: "DELETE" });
     if (res.ok) {
       setWorkers((prev) => prev.filter((w) => w.id !== id));
     }

@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from "@/lib/utils";
@@ -31,7 +33,7 @@ export default function AdminDashboard() {
   async function handleSeed(reset: boolean) {
     setSeeding(true);
     setSeedMsg("");
-    const res = await fetch(`/api/seed${reset ? "?reset=true" : ""}`, { method: "POST" });
+    const res = await authFetch(`/api/seed${reset ? "?reset=true" : ""}`, { method: "POST" });
     const data = await res.json();
     setSeedMsg(data.message || data.error || "Done");
     setSeeding(false);
@@ -39,7 +41,7 @@ export default function AdminDashboard() {
   }
 
   function loadStats() {
-    fetch("/api/admin/stats")
+    authFetch("/api/admin/stats")
       .then((r) => r.json())
       .then((d) => {
         setStats(d.stats);

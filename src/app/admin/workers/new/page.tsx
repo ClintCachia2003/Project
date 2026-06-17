@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -48,7 +50,7 @@ export default function AddWorkerPage() {
     if (!form.skills.trim()) { setError("Please enter at least one skill"); return; }
 
     setLoading(true);
-    const res = await fetch("/api/admin/workers", {
+    const res = await authFetch("/api/admin/workers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

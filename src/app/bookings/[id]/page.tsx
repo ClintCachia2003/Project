@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -56,7 +58,7 @@ function BookingDetailContent() {
 
   useEffect(() => {
     if (user) {
-      fetch(`/api/bookings/${id}`)
+      authFetch(`/api/bookings/${id}`)
         .then((r) => r.json())
         .then((d) => { setBooking(d.booking); setLoading(false); })
         .catch(() => setLoading(false));
@@ -65,7 +67,7 @@ function BookingDetailContent() {
 
   async function updateStatus(status: string) {
     setActionLoading(true);
-    const res = await fetch(`/api/bookings/${id}`, {
+    const res = await authFetch(`/api/bookings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, cancelReason: cancelReason || undefined }),
@@ -81,7 +83,7 @@ function BookingDetailContent() {
   async function submitReview() {
     if (!reviewComment.trim()) return;
     setReviewLoading(true);
-    const res = await fetch("/api/reviews", {
+    const res = await authFetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId: id, rating: reviewRating, comment: reviewComment }),

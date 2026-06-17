@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,7 +35,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      fetch("/api/bookings")
+      authFetch("/api/bookings")
         .then((r) => r.json())
         .then((d) => { setBookings(d.bookings || []); setLoading(false); })
         .catch(() => setLoading(false));

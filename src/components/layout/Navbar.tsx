@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { authFetch } from "@/lib/api";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -40,7 +41,7 @@ export default function Navbar() {
   }, []);
 
   async function fetchNotifications() {
-    const res = await fetch("/api/notifications");
+    const res = await authFetch("/api/notifications");
     if (res.ok) {
       const data = await res.json();
       setNotifications(data.notifications);
@@ -49,7 +50,7 @@ export default function Navbar() {
   }
 
   async function markAllRead() {
-    await fetch("/api/notifications", { method: "PATCH" });
+    await authFetch("/api/notifications", { method: "PATCH" });
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   }

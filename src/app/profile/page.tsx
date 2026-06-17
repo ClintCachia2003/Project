@@ -1,5 +1,7 @@
 "use client";
 
+import { authFetch } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,7 +50,7 @@ export default function ProfilePage() {
     setError("");
     setSuccess(false);
 
-    const res = await fetch("/api/user/profile", {
+    const res = await authFetch("/api/user/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
