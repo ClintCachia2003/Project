@@ -33,6 +33,7 @@ interface Booking {
   };
   review?: { rating: number; comment: string; author: { name: string } };
   payment?: { status: string; amount: number; paidAt?: string };
+  dispute?: { id: string; status: string; reason: string; description: string; resolution?: string };
 }
 
 function BookingDetailContent() {
@@ -51,6 +52,14 @@ function BookingDetailContent() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("Work not completed");
+  const [disputeDescription, setDisputeDescription] = useState("");
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeSubmitted, setDisputeSubmitted] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -78,6 +87,38 @@ function BookingDetailContent() {
       setShowCancelForm(false);
     }
     setActionLoading(false);
+  }
+
+  async function handleMarkAsPaid() {
+    setPaymentLoading(true);
+    const res = await authFetch("/api/payments/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id }),
+    });
+    if (res.ok) {
+      setPaymentSuccess(true);
+      setShowPayment(false);
+      setBooking((prev) => prev ? { ...prev, payment: { status: "completed", amount: prev.totalAmount } } : null);
+    }
+    setPaymentLoading(false);
+  }
+
+  async function submitDispute() {
+    if (!disputeDescription.trim()) return;
+    setDisputeLoading(true);
+    const res = await authFetch("/api/disputes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id, reason: disputeReason, description: disputeDescription }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setBooking((prev) => prev ? { ...prev, dispute: data.dispute } : null);
+      setDisputeSubmitted(true);
+      setShowDisputeForm(false);
+    }
+    setDisputeLoading(false);
   }
 
   async function submitReview() {
@@ -207,17 +248,52 @@ function BookingDetailContent() {
       {/* Payment */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
         <h3 className="font-bold text-gray-900 mb-3">Payment</h3>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-3">
           <div>
             <p className="text-sm text-gray-500">Service Fee</p>
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(booking.totalAmount)}</p>
           </div>
           <div className={`px-3 py-1.5 rounded-xl text-sm font-medium ${
-            booking.payment?.status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+            booking.payment?.status === "completed" || booking.payment?.status === "paid"
+              ? "bg-green-100 text-green-700"
+              : "bg-yellow-100 text-yellow-700"
           }`}>
-            {booking.payment?.status === "paid" ? "✓ Paid" : "⏳ Pending"}
+            {booking.payment?.status === "completed" || booking.payment?.status === "paid"
+              ? "✓ Paid"
+              : "⏳ Pending"}
           </div>
         </div>
+
+        {/* Pay Now section */}
+        {isCustomer && booking.status === "confirmed" &&
+          (!booking.payment || (booking.payment.status !== "completed" && booking.payment.status !== "paid")) && (
+          <>
+            {!showPayment ? (
+              <Button className="w-full" variant="outline" onClick={() => setShowPayment(true)}>
+                💳 Pay Now
+              </Button>
+            ) : (
+              <div className="mt-3 p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
+                <p className="text-sm font-semibold text-blue-900">Payment Integration</p>
+                <p className="text-sm text-blue-700">
+                  Payment integration ready. Add your Stripe keys to .env to enable live payments.
+                </p>
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={handleMarkAsPaid} loading={paymentLoading}>
+                    Mark as Paid (Test)
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowPayment(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {paymentSuccess && (
+          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
+            ✓ Payment recorded successfully
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -311,6 +387,62 @@ function BookingDetailContent() {
             <StarRating rating={booking.review.rating} size="sm" />
             <p className="text-sm text-gray-700 mt-2">{booking.review.comment}</p>
           </div>
+        )}
+
+        {/* Dispute section */}
+        {isCustomer && ["completed", "cancelled"].includes(booking.status) && (
+          <>
+            {booking.dispute || disputeSubmitted ? (
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+                <p className="text-xs text-orange-600 font-medium mb-1">⚖️ Dispute Opened</p>
+                <p className="text-sm text-gray-700">
+                  Reason: {booking.dispute?.reason || disputeReason}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 capitalize">
+                  Status: {booking.dispute?.status || "open"}
+                </p>
+                {booking.dispute?.resolution && (
+                  <p className="text-sm text-gray-700 mt-2">Resolution: {booking.dispute.resolution}</p>
+                )}
+              </div>
+            ) : !showDisputeForm ? (
+              <Button variant="outline" className="w-full" onClick={() => setShowDisputeForm(true)}>
+                ⚖️ Open Dispute
+              </Button>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+                <h3 className="font-bold text-gray-900">Open a Dispute</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason</label>
+                  <select
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {["Work not completed", "Poor quality", "No show", "Overcharged", "Other"].map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                  <textarea
+                    rows={3}
+                    value={disputeDescription}
+                    onChange={(e) => setDisputeDescription(e.target.value)}
+                    placeholder="Describe the issue in detail..."
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={submitDispute} loading={disputeLoading}>
+                    Submit Dispute
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowDisputeForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

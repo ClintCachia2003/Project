@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { sendNotificationToUser } from "@/app/api/notifications/stream/route";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         review: { include: { author: { select: { name: true, avatar: true } } } },
         payment: true,
+        dispute: true,
       },
     });
 
@@ -54,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Notifications for status changes
     if (status === "confirmed") {
-      await prisma.notification.create({
+      const notif = await prisma.notification.create({
         data: {
           userId: booking.customerId,
           title: "Booking Confirmed!",
@@ -63,8 +65,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           link: `/bookings/${id}`,
         },
       });
+      sendNotificationToUser(booking.customerId, { type: "notification", notification: notif });
     } else if (status === "cancelled") {
-      await prisma.notification.create({
+      const notif = await prisma.notification.create({
         data: {
           userId: booking.customerId,
           title: "Booking Cancelled",
@@ -73,8 +76,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           link: `/bookings/${id}`,
         },
       });
+      sendNotificationToUser(booking.customerId, { type: "notification", notification: notif });
     } else if (status === "completed") {
-      await prisma.notification.create({
+      const notif = await prisma.notification.create({
         data: {
           userId: booking.customerId,
           title: "Job Completed",
@@ -83,6 +87,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           link: `/bookings/${id}`,
         },
       });
+      sendNotificationToUser(booking.customerId, { type: "notification", notification: notif });
       // Mark payment as paid
       await prisma.payment.updateMany({
         where: { bookingId: id },

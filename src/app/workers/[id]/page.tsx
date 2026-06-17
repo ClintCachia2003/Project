@@ -4,6 +4,7 @@ import { authFetch } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import StarRating from "@/components/ui/StarRating";
@@ -156,8 +157,14 @@ export default function WorkerProfilePage() {
       {/* Profile header */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-5">
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-            <span className="text-white text-3xl font-bold">{worker.user.name[0]}</span>
+          <div className="w-20 h-20 rounded-2xl flex-shrink-0 shadow-lg overflow-hidden relative">
+            {worker.user.avatar ? (
+              <Image src={worker.user.avatar} alt={worker.user.name} fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+                <span className="text-white text-3xl font-bold">{worker.user.name[0]}</span>
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-start justify-between gap-3">

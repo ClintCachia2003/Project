@@ -2,7 +2,8 @@
 
 import { authFetch } from "@/lib/api";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/ui/Button";
@@ -22,6 +23,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -67,6 +70,22 @@ export default function ProfilePage() {
     setLoading(false);
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarLoading(true);
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const res = await authFetch("/api/user/avatar", { method: "POST", body: formData });
+    if (res.ok) {
+      await refreshUser();
+    } else {
+      const data = await res.json();
+      setError(data.error || "Failed to upload avatar");
+    }
+    setAvatarLoading(false);
+  }
+
   if (authLoading || !user) return null;
 
   return (
@@ -79,12 +98,49 @@ export default function ProfilePage() {
       {/* Avatar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-5">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center">
-            <span className="text-white text-2xl font-bold">{user.name[0]}</span>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center cursor-pointer relative overflow-hidden group"
+            onClick={() => fileInputRef.current?.click()}
+            title="Click to change avatar"
+          >
+            {user.avatar ? (
+              <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+                <span className="text-white text-2xl font-bold">{user.name[0]}</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {avatarLoading ? (
+                <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </div>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           <div>
             <p className="font-bold text-gray-900">{user.name}</p>
             <p className="text-sm text-gray-500">{user.email}</p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs text-blue-600 hover:underline mt-0.5"
+            >
+              Change photo
+            </button>
             <div className="mt-1">
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                 user.role === "worker" ? "bg-purple-100 text-purple-700" :

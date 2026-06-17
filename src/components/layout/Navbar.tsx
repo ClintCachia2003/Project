@@ -31,6 +31,26 @@ export default function Navbar() {
   }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("tradepro_token") : null;
+    if (!token) return;
+
+    const es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "notification" && data.notification) {
+          setUnreadCount((prev) => prev + 1);
+          setNotifications((prev) => [data.notification, ...prev]);
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+    return () => es.close();
+  }, [user]);
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotifOpen(false);

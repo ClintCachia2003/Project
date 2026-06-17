@@ -25,6 +25,7 @@ model User {
   workerProfile      Worker?
   reviews            Review[]       @relation("ReviewAuthor")
   notifications      Notification[]
+  disputesOpened     Dispute[]      @relation("DisputesOpened")
 }
 
 model Trade {
@@ -98,6 +99,7 @@ model Booking {
   worker        Worker   @relation(fields: [workerId], references: [id])
   review        Review?
   payment       Payment?
+  dispute       Dispute?
 }
 
 model Review {
@@ -137,4 +139,19 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedById  String
+  openedBy    User      @relation("DisputesOpened", fields: [openedById], references: [id])
+  reason      String
+  description String
+  status      String    @default("open")
+  resolution  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
