@@ -233,7 +233,7 @@ export async function seedDatabase() {
     tradeMap[trade.slug] = created.id;
   }
 
-  const workerPassword = await bcrypt.hash("Worker@123", 10);
+  const workerPassword = await bcrypt.hash("Worker@TradePro1", 10);
 
   for (const w of workerData) {
     const user = await prisma.user.create({
