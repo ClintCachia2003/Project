@@ -18,3 +18,12 @@ export const prisma =
   globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+// Auto-seed on first import in development
+let seeded = false;
+export async function ensureSeeded() {
+  if (seeded) return;
+  seeded = true;
+  const { seedDatabase } = await import("./seed");
+  await seedDatabase();
+}

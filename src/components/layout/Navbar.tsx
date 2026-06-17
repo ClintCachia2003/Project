@@ -155,6 +155,11 @@ export default function Navbar() {
                         <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
                         <Link href="/bookings" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
                         <Link href="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Profile Settings</Link>
+                        {user.role === "admin" && (
+                          <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 text-sm text-purple-700 font-medium hover:bg-purple-50">
+                            ⚙️ Admin Panel
+                          </Link>
+                        )}
                         <hr className="my-1 border-gray-100" />
                         <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
                           Sign Out

@@ -7,6 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
+const TEST_ACCOUNTS = [
+  { label: "Customer Demo", email: "demo@tradepro.com", password: "demo1234", role: "customer", color: "bg-blue-50 border-blue-200 text-blue-700" },
+  { label: "Admin", email: "admin@tradepro.com", password: "Admin@TradePro1", role: "admin", color: "bg-purple-50 border-purple-200 text-purple-700" },
+];
+
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
@@ -14,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [quickLoading, setQuickLoading] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,23 +29,22 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setLoading(false);
     }
   }
 
-  async function loginAsDemo() {
-    setEmail("demo@tradepro.com");
-    setPassword("demo1234");
-    setLoading(true);
+  async function quickLogin(acc: typeof TEST_ACCOUNTS[0]) {
+    setError("");
+    setQuickLoading(acc.role);
     try {
-      await login("demo@tradepro.com", "demo1234");
-      router.push("/dashboard");
+      await login(acc.email, acc.password);
+      router.push(acc.role === "admin" ? "/admin" : "/dashboard");
     } catch {
-      setError("Demo login failed. Please seed the database first.");
+      setError("Quick login failed. Please run the seed first.");
     } finally {
-      setLoading(false);
+      setQuickLoading(null);
     }
   }
 
@@ -55,6 +60,34 @@ export default function LoginPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-gray-500 mt-1">Sign in to your account</p>
+        </div>
+
+        {/* Quick login cards */}
+        <div className="mb-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 text-center">Quick Access</p>
+          <div className="grid grid-cols-2 gap-2">
+            {TEST_ACCOUNTS.map((acc) => (
+              <button
+                key={acc.role}
+                onClick={() => quickLogin(acc)}
+                disabled={!!quickLoading}
+                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all hover:opacity-80 disabled:opacity-50 ${acc.color}`}
+              >
+                <span className="text-xs font-bold mb-0.5">{acc.label}</span>
+                <span className="text-xs opacity-75">{acc.email}</span>
+                {quickLoading === acc.role && <span className="text-xs mt-1">Signing in...</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-3 bg-gray-50 text-sm text-gray-400">or sign in manually</span>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
@@ -88,23 +121,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-3 bg-white text-sm text-gray-400">or</span>
-            </div>
-          </div>
-
-          <button
-            onClick={loginAsDemo}
-            disabled={loading}
-            className="w-full py-2.5 px-4 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            Try Demo Account
-          </button>
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">

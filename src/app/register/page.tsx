@@ -2,25 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { Suspense } from "react";
 
-function RegisterForm() {
+export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const defaultRole = searchParams.get("role") || "customer";
-
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     phone: "",
-    role: defaultRole,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,27 +63,6 @@ function RegisterForm() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-          {/* Role toggle */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
-            {[
-              { value: "customer", label: "I need a pro" },
-              { value: "worker", label: "I am a pro" },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => update("role", opt.value)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
-                  form.role === opt.value
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
           {error && (
             <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
               {error}
@@ -155,15 +129,12 @@ function RegisterForm() {
             Sign in
           </Link>
         </p>
+
+        <p className="text-center text-xs text-gray-400 mt-3">
+          Are you a trade professional?{" "}
+          <Link href="/contact" className="text-blue-500 hover:underline">Contact us to apply</Link>
+        </p>
       </div>
     </div>
-  );
-}
-
-export default function RegisterPage() {
-  return (
-    <Suspense>
-      <RegisterForm />
-    </Suspense>
   );
 }
