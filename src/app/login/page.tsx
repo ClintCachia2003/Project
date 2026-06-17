@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input";
 
 const TEST_ACCOUNTS = [
   { label: "Customer Demo", email: "demo@tradepro.com", password: "demo1234", role: "customer", color: "bg-blue-50 border-blue-200 text-blue-700" },
+  { label: "Worker Demo", email: "mike.t@tradepro.com", password: "Worker@TradePro1", role: "worker", color: "bg-green-50 border-green-200 text-green-700" },
   { label: "Admin", email: "admin@tradepro.com", password: "Admin@TradePro1", role: "admin", color: "bg-purple-50 border-purple-200 text-purple-700" },
 ];
 
@@ -40,7 +41,7 @@ export default function LoginPage() {
     setQuickLoading(acc.role);
     try {
       await login(acc.email, acc.password);
-      router.push(acc.role === "admin" ? "/admin" : "/dashboard");
+      router.push(acc.role === "admin" ? "/admin" : acc.role === "worker" ? "/worker" : "/dashboard");
     } catch {
       setError("Quick login failed. Please run the seed first.");
     } finally {
@@ -65,7 +66,7 @@ export default function LoginPage() {
         {/* Quick login cards */}
         <div className="mb-5">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 text-center">Quick Access</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {TEST_ACCOUNTS.map((acc) => (
               <button
                 key={acc.role}
