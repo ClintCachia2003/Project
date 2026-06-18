@@ -8,8 +8,8 @@ import Footer from "@/components/layout/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TradePro - Find Trusted Trade Professionals",
-  description: "Book verified carpenters, electricians, plumbers, HVAC technicians, and more. Quality service on your schedule.",
+  title: "Verifix — Malta's Verified Tradespeople",
+  description: "Find and book personally vetted, licensed tradespeople across Malta. Plumbers, electricians, carpenters, AC engineers and more — price agreed upfront, every pro verified.",
   keywords: "trade professionals, carpenter, electrician, plumber, HVAC, handyman, home services",
 };
 

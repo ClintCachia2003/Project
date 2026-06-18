@@ -210,6 +210,26 @@ export default function WorkerProfilePage() {
         </div>
       </div>
 
+      {/* Verification badges — most important trust signal */}
+      {worker.isVerified && (
+        <div className="bg-blue-950 rounded-2xl p-5 mb-5">
+          <p className="text-xs font-semibold text-blue-300 uppercase tracking-wider mb-3">Verified by Verifix — all four checks passed</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: "🪪", label: "Identity Verified" },
+              { icon: "📋", label: "Licence Confirmed" },
+              { icon: "🛡️", label: "Insurance Checked" },
+              { icon: "👥", label: "References Reviewed" },
+            ].map((badge) => (
+              <div key={badge.label} className="flex items-center gap-2 bg-blue-900/50 border border-blue-800/50 rounded-xl px-3 py-2.5">
+                <span className="text-lg flex-shrink-0">{badge.icon}</span>
+                <span className="text-xs font-semibold text-white">{badge.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex bg-white rounded-2xl border border-gray-100 p-1 mb-5 overflow-x-auto">
         {[
@@ -254,8 +274,8 @@ export default function WorkerProfilePage() {
               {[
                 { label: "Years of Experience", value: `${worker.yearsExperience} years` },
                 { label: "Jobs Completed", value: worker.completedJobs.toString() },
-                { label: "License Number", value: worker.licenseNumber || "Not required" },
-                { label: "Service Radius", value: `${worker.serviceRadius} miles` },
+                { label: "Licence Number", value: worker.licenseNumber || "Not provided" },
+                { label: "Service Area", value: `${worker.serviceRadius} km radius` },
                 { label: "Member Since", value: new Date(worker.user.createdAt).getFullYear().toString() },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
@@ -453,7 +473,7 @@ export default function WorkerProfilePage() {
                       type="text"
                       value={bookingForm.address}
                       onChange={(e) => setBookingForm((p) => ({ ...p, address: e.target.value }))}
-                      placeholder="123 Main St"
+                      placeholder="e.g. 14, Triq il-Ħelsien"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -465,7 +485,7 @@ export default function WorkerProfilePage() {
                       type="text"
                       value={bookingForm.city}
                       onChange={(e) => setBookingForm((p) => ({ ...p, city: e.target.value }))}
-                      placeholder="New York"
+                      placeholder="e.g. Sliema, Naxxar, Valletta"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

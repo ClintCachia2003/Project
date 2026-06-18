@@ -9,8 +9,8 @@ import Input from "@/components/ui/Input";
 
 const TEST_ACCOUNTS = [
   { label: "Customer Demo", email: "demo@tradepro.com", password: "demo1234", role: "customer", color: "bg-blue-50 border-blue-200 text-blue-700" },
-  { label: "Worker Demo", email: "mike.t@tradepro.com", password: "Worker@TradePro1", role: "worker", color: "bg-green-50 border-green-200 text-green-700" },
-  { label: "Admin", email: "admin@tradepro.com", password: "Admin@TradePro1", role: "admin", color: "bg-purple-50 border-purple-200 text-purple-700" },
+  { label: "Worker Demo", email: "mike.t@tradepro.com", password: "Worker@Verifix1", role: "worker", color: "bg-green-50 border-green-200 text-green-700" },
+  { label: "Admin", email: "admin@tradepro.com", password: "Admin@Verifix1", role: "admin", color: "bg-purple-50 border-purple-200 text-purple-700" },
 ];
 
 export default function LoginPage() {
@@ -57,7 +57,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">T</span>
             </div>
-            <span className="font-bold text-2xl text-gray-900">TradePro</span>
+            <span className="font-bold text-2xl text-gray-900">Verifix</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-gray-500 mt-1">Sign in to your account</p>

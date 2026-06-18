@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-white font-bold">T</span>
             </div>
             <div>
-              <p className="font-bold text-sm">TradePro</p>
+              <p className="font-bold text-sm">Verifix</p>
               <p className="text-xs text-gray-400">Admin Panel</p>
             </div>
           </div>

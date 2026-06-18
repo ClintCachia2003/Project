@@ -56,10 +56,10 @@ export default function RegisterPage() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">T</span>
             </div>
-            <span className="font-bold text-2xl text-gray-900">TradePro</span>
+            <span className="font-bold text-2xl text-gray-900">Verifix</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="text-gray-500 mt-1">Join thousands of happy homeowners</p>
+          <p className="text-gray-500 mt-1">Find and book vetted tradespeople across Malta</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
@@ -75,7 +75,7 @@ export default function RegisterPage() {
               type="text"
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
-              placeholder="John Doe"
+              placeholder="Maria Borg"
               required
             />
             <Input
@@ -91,7 +91,7 @@ export default function RegisterPage() {
               type="tel"
               value={form.phone}
               onChange={(e) => update("phone", e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              placeholder="+356 9900 0000"
             />
             <Input
               label="Password"
@@ -130,10 +130,17 @@ export default function RegisterPage() {
           </Link>
         </p>
 
-        <p className="text-center text-xs text-gray-400 mt-3">
-          Are you a trade professional?{" "}
-          <Link href="/contact" className="text-blue-500 hover:underline">Contact us to apply</Link>
-        </p>
+        {/* Tradesperson CTA — separate and prominent */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center">
+          <p className="text-sm font-semibold text-blue-900 mb-1">Are you a tradesperson?</p>
+          <p className="text-xs text-blue-700 mb-3">This form is for customers only. Tradespeople join through a separate vetting application.</p>
+          <Link
+            href="/apply"
+            className="inline-block bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Apply to Join as a Pro →
+          </Link>
+        </div>
       </div>
     </div>
   );

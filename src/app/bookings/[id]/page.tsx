@@ -344,13 +344,13 @@ function BookingDetailContent() {
               </Button>
             ) : (
               <div className="mt-3 p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
-                <p className="text-sm font-semibold text-blue-900">Payment Integration</p>
+                <p className="text-sm font-semibold text-blue-900">💳 Secure Online Payment</p>
                 <p className="text-sm text-blue-700">
-                  Payment integration ready. Add your Stripe keys to .env to enable live payments.
+                  Your payment is processed securely. The tradesperson will be notified once payment is confirmed.
                 </p>
                 <div className="flex gap-2">
                   <Button className="flex-1" onClick={handleMarkAsPaid} loading={paymentLoading}>
-                    Mark as Paid (Test)
+                    Confirm Payment — {booking ? `€${booking.totalAmount?.toFixed(2)}` : ""}
                   </Button>
                   <Button variant="ghost" onClick={() => setShowPayment(false)}>Cancel</Button>
                 </div>

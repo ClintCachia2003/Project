@@ -81,8 +81,9 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { href: "/trades", label: "Find a Trade" },
+    { href: "/trades", label: "Find a Tradesperson" },
     { href: "/how-it-works", label: "How It Works" },
+    { href: "/apply", label: "Join as a Pro" },
   ];
 
   return (
@@ -92,9 +93,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <span className="text-white font-bold text-lg">T</span>
+              <span className="text-white font-bold text-lg">V</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">TradePro</span>
+            <span className="font-bold text-xl text-gray-900">Verifix</span>
           </Link>
 
           {/* Desktop Nav */}
